@@ -276,9 +276,12 @@ impl Doc {
         assert_map(&*doc, &obj)?;
         Ok(doc
             .map_range(&obj, ..)
-            .map(|am::iter::MapRangeItem { key, value, id, .. }| KeyValue {
-                key: key.into(),
-                value: (value, id).into(),
+            .map(|item| {
+                let id = item.id().clone();
+                KeyValue {
+                    key: item.key.into(),
+                    value: (item.value.into_value(), id).into(),
+                }
             })
             .collect::<Vec<_>>())
     }
@@ -294,9 +297,12 @@ impl Doc {
         assert_map(&*doc, &obj)?;
         Ok(doc
             .map_range_at(&obj, .., &heads)
-            .map(|am::iter::MapRangeItem { key, value, id, .. }| KeyValue {
-                key: key.into(),
-                value: (value, id).into(),
+            .map(|item| {
+                let id = item.id().clone();
+                KeyValue {
+                    key: item.key.into(),
+                    value: (item.value.into_value(), id).into(),
+                }
             })
             .collect::<Vec<_>>())
     }
