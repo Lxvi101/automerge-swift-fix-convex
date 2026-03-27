@@ -108,10 +108,13 @@ echo "▸ Consolidating the headers and modulemaps for XCFramework generation"
 # Sources/_CAutomergeUniffi/include/automergeFFI.h within the project
 cp "${SWIFT_FOLDER}/automergeFFI.h" "${SWIFT_FOLDER}/../Sources/_CAutomergeUniffi/include"
 cp "${SWIFT_FOLDER}/automergeFFI.modulemap" "${SWIFT_FOLDER}/../Sources/_CAutomergeUniffi/include/module.modulemap"
-# copies the generated header into the build folder structure for local XCFramework usage
-mkdir -p "${BUILD_FOLDER}/includes"
-cp "${SWIFT_FOLDER}/automergeFFI.h" "${BUILD_FOLDER}/includes"
-cp "${SWIFT_FOLDER}/automergeFFI.modulemap" "${BUILD_FOLDER}/includes/module.modulemap"
+# copies the generated header into the build folder structure for local XCFramework usage.
+# Headers and modulemap live under includes/automergeFFI/ so Xcode's ProcessXCFramework
+# stages .../include/automergeFFI/module.modulemap instead of a generic .../include/module.modulemap,
+# which collides with other binary XCFrameworks (e.g. convex-swift) that use the same pattern.
+mkdir -p "${BUILD_FOLDER}/includes/automergeFFI"
+cp "${SWIFT_FOLDER}/automergeFFI.h" "${BUILD_FOLDER}/includes/automergeFFI/"
+cp "${SWIFT_FOLDER}/automergeFFI.modulemap" "${BUILD_FOLDER}/includes/automergeFFI/module.modulemap"
 
 echo "▸ Lipo (merge) x86 and arm simulator static libraries into a fat static binary"
 mkdir -p "${BUILD_FOLDER}/ios-simulator/release"
