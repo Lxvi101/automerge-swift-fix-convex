@@ -48,9 +48,17 @@ rustup target add aarch64-apple-darwin # macOS ARM/M1
 rustup target add x86_64-apple-darwin # macOS Intel/x86
 rustup target add wasm32-wasip1 # WebAssembly
 rustup target add wasm32-wasip1-threads # WebAssembly with native multi threading capabilities
-cargo_build="cargo build --manifest-path $RUST_FOLDER/Cargo.toml"
-cargo_build_nightly="cargo +${RUST_NIGHTLY} build --manifest-path $RUST_FOLDER/Cargo.toml"
-cargo_build_nightly_with_std="cargo -Zbuild-std build --manifest-path $RUST_FOLDER/Cargo.toml"
+
+# Use functions so paths with spaces (e.g. "Local Development/...") stay a single argument.
+run_cargo_build() {
+    cargo build --manifest-path "$RUST_FOLDER/Cargo.toml" "$@"
+}
+run_cargo_build_nightly() {
+    cargo +"${RUST_NIGHTLY}" build --manifest-path "$RUST_FOLDER/Cargo.toml" "$@"
+}
+run_cargo_build_nightly_with_std() {
+    cargo -Zbuild-std build --manifest-path "$RUST_FOLDER/Cargo.toml" "$@"
+}
 
 
 echo "▸ Clean state"
@@ -67,41 +75,41 @@ cargo run --manifest-path "$RUST_FOLDER/Cargo.toml"  \
 
 echo "▸ Building for x86_64-apple-ios"
 CFLAGS_x86_64_apple_ios="-target x86_64-apple-ios" \
-$cargo_build --target x86_64-apple-ios --locked --release
+run_cargo_build --target x86_64-apple-ios --locked --release
 
 echo "▸ Building for aarch64-apple-ios-sim"
 CFLAGS_aarch64_apple_ios="-target aarch64-apple-ios-sim" \
-$cargo_build --target aarch64-apple-ios-sim --locked --release
+run_cargo_build --target aarch64-apple-ios-sim --locked --release
 
 echo "▸ Building for aarch64-apple-ios"
 CFLAGS_aarch64_apple_ios="-target aarch64-apple-ios" \
-$cargo_build --target aarch64-apple-ios --locked --release
+run_cargo_build --target aarch64-apple-ios --locked --release
 
 echo "▸ Building for aarch64-apple-visionos-sim"
 CFLAGS_aarch64_apple_visionos="-target aarch64-apple-visionos-sim" \
-$cargo_build_nightly_with_std --target aarch64-apple-visionos-sim --locked --release
+run_cargo_build_nightly_with_std --target aarch64-apple-visionos-sim --locked --release
 
 echo "▸ Building for aarch64-apple-visionos"
 CFLAGS_aarch64_apple_visionos="-target aarch64-apple-visionos" \
-$cargo_build_nightly_with_std --target aarch64-apple-visionos --locked --release
+run_cargo_build_nightly_with_std --target aarch64-apple-visionos --locked --release
 
 echo "▸ Building for aarch64-apple-darwin"
 CFLAGS_aarch64_apple_darwin="-target aarch64-apple-darwin" \
-$cargo_build --target aarch64-apple-darwin --locked --release
+run_cargo_build --target aarch64-apple-darwin --locked --release
 
 echo "▸ Building for x86_64-apple-darwin"
 CFLAGS_x86_64_apple_darwin="-target x86_64-apple-darwin" \
-$cargo_build --target x86_64-apple-darwin --locked --release
+run_cargo_build --target x86_64-apple-darwin --locked --release
 
 echo "▸ Building for aarch64-apple-ios-macabi"
-$cargo_build_nightly -Z build-std --target aarch64-apple-ios-macabi --locked --release
+run_cargo_build_nightly -Z build-std --target aarch64-apple-ios-macabi --locked --release
 
 echo "▸ Building for x86_64-apple-ios-macabi"
-$cargo_build_nightly -Z build-std --target x86_64-apple-ios-macabi --locked --release
+run_cargo_build_nightly -Z build-std --target x86_64-apple-ios-macabi --locked --release
 
 echo "▸ Building for WASM"
-$cargo_build --target wasm32-wasip1 --locked --release
-$cargo_build --target wasm32-wasip1-threads --locked --release
+run_cargo_build --target wasm32-wasip1 --locked --release
+run_cargo_build --target wasm32-wasip1-threads --locked --release
 
 echo "▸ Consolidating the headers and modulemaps for XCFramework generation"
 # copies the generated header from AutomergeUniffi/automergeFFI.h to
@@ -165,34 +173,34 @@ xcodebuild -create-xcframework \
 PRIVACY_FOLDER="${THIS_SCRIPT_DIR}/../privacy"
 
 # macOS
-mkdir -p ${XCFRAMEWORK_FOLDER}/macos-arm64_x86_64/Versions
-mkdir -p ${XCFRAMEWORK_FOLDER}/macos-arm64_x86_64/Versions/A
-mkdir -p ${XCFRAMEWORK_FOLDER}/macos-arm64_x86_64/Versions/A/Resources
-cp ${PRIVACY_FOLDER}/PrivacyInfo.xcprivacy ${XCFRAMEWORK_FOLDER}/macos-arm64_x86_64/Versions/A/Resources
+mkdir -p "${XCFRAMEWORK_FOLDER}/macos-arm64_x86_64/Versions"
+mkdir -p "${XCFRAMEWORK_FOLDER}/macos-arm64_x86_64/Versions/A"
+mkdir -p "${XCFRAMEWORK_FOLDER}/macos-arm64_x86_64/Versions/A/Resources"
+cp "${PRIVACY_FOLDER}/PrivacyInfo.xcprivacy" "${XCFRAMEWORK_FOLDER}/macos-arm64_x86_64/Versions/A/Resources"
 
 # Mac Catalyst
-mkdir -p ${XCFRAMEWORK_FOLDER}/ios-arm64_x86_64-maccatalyst/Versions
-mkdir -p ${XCFRAMEWORK_FOLDER}/ios-arm64_x86_64-maccatalyst/Versions/A
-mkdir -p ${XCFRAMEWORK_FOLDER}/ios-arm64_x86_64-maccatalyst/Versions/A/Resources
-cp ${PRIVACY_FOLDER}/PrivacyInfo.xcprivacy ${XCFRAMEWORK_FOLDER}/ios-arm64_x86_64-maccatalyst/Versions/A/Resources
+mkdir -p "${XCFRAMEWORK_FOLDER}/ios-arm64_x86_64-maccatalyst/Versions"
+mkdir -p "${XCFRAMEWORK_FOLDER}/ios-arm64_x86_64-maccatalyst/Versions/A"
+mkdir -p "${XCFRAMEWORK_FOLDER}/ios-arm64_x86_64-maccatalyst/Versions/A/Resources"
+cp "${PRIVACY_FOLDER}/PrivacyInfo.xcprivacy" "${XCFRAMEWORK_FOLDER}/ios-arm64_x86_64-maccatalyst/Versions/A/Resources"
 
 # iOS
-cp ${PRIVACY_FOLDER}/PrivacyInfo.xcprivacy ${XCFRAMEWORK_FOLDER}/ios-arm64/
+cp "${PRIVACY_FOLDER}/PrivacyInfo.xcprivacy" "${XCFRAMEWORK_FOLDER}/ios-arm64/"
 
 # iOS simulator
-cp ${PRIVACY_FOLDER}/PrivacyInfo.xcprivacy ${XCFRAMEWORK_FOLDER}/ios-arm64_x86_64-simulator/
+cp "${PRIVACY_FOLDER}/PrivacyInfo.xcprivacy" "${XCFRAMEWORK_FOLDER}/ios-arm64_x86_64-simulator/"
 
 # Mac Catalyst
-mkdir -p ${XCFRAMEWORK_FOLDER}/visionos-arm64_x86_64-maccatalyst/Versions
-mkdir -p ${XCFRAMEWORK_FOLDER}/visionos-arm64_x86_64-maccatalyst/Versions/A
-mkdir -p ${XCFRAMEWORK_FOLDER}/visionos-arm64_x86_64-maccatalyst/Versions/A/Resources
-cp ${PRIVACY_FOLDER}/PrivacyInfo.xcprivacy ${XCFRAMEWORK_FOLDER}/ios-arm64_x86_64-maccatalyst/Versions/A/Resources
+mkdir -p "${XCFRAMEWORK_FOLDER}/visionos-arm64_x86_64-maccatalyst/Versions"
+mkdir -p "${XCFRAMEWORK_FOLDER}/visionos-arm64_x86_64-maccatalyst/Versions/A"
+mkdir -p "${XCFRAMEWORK_FOLDER}/visionos-arm64_x86_64-maccatalyst/Versions/A/Resources"
+cp "${PRIVACY_FOLDER}/PrivacyInfo.xcprivacy" "${XCFRAMEWORK_FOLDER}/ios-arm64_x86_64-maccatalyst/Versions/A/Resources"
 
 # visionos
-cp ${PRIVACY_FOLDER}/PrivacyInfo.xcprivacy ${XCFRAMEWORK_FOLDER}/xros-arm64/
+cp "${PRIVACY_FOLDER}/PrivacyInfo.xcprivacy" "${XCFRAMEWORK_FOLDER}/xros-arm64/"
 
 # visionos simulator
-cp ${PRIVACY_FOLDER}/PrivacyInfo.xcprivacy ${XCFRAMEWORK_FOLDER}/xros-arm64-simulator/
+cp "${PRIVACY_FOLDER}/PrivacyInfo.xcprivacy" "${XCFRAMEWORK_FOLDER}/xros-arm64-simulator/"
 
 
 echo "▸ Expose libuniffi_automerge.a WebAssembly archive"
